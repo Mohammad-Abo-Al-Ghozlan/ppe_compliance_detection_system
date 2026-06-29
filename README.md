@@ -142,3 +142,23 @@ No changes to the core training or evaluation loops are required.
 ## License
 
 MIT
+
+---
+
+## Author
+
+<div align="center">
+
+### Built with precision by **Mohammad Abo Al Ghozlan (MoGhoz)**
+
+**Full-Stack Software Engineer • Machine Learning Enthusiast • Computer Vision Developer**
+
+Passionate about building production-grade software systems, scalable backend architectures, AI-powered applications, and enterprise automation solutions.
+
+**GitHub:** https://github.com/Mohammad-Abo-Al-Ghozlan
+**LinkedIn:** https://linkedin.com/in/mohammad-abo-al-ghozlan
+**Portfolio:** https://mohammad-ghozlan.vercel.app
+
+*"Engineering software that bridges intelligent algorithms with real-world applications."*
+
+</div>
