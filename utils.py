@@ -311,15 +311,9 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH) -> PipelineConfig
     data_yaml_dir = data_yaml_path.parent
 
     # Resolve dataset paths from data.yaml
-    train_path = _resolve_dataset_path(
-        data_yaml_dir, data_yaml.get("train", "../train/images")
-    )
-    val_path = _resolve_dataset_path(
-        data_yaml_dir, data_yaml.get("val", "../valid/images")
-    )
-    test_path = _resolve_dataset_path(
-        data_yaml_dir, data_yaml.get("test", "../test/images")
-    )
+    train_path = _resolve_dataset_path(data_yaml_dir, data_yaml.get("train", "../train/images"))
+    val_path = _resolve_dataset_path(data_yaml_dir, data_yaml.get("val", "../valid/images"))
+    test_path = _resolve_dataset_path(data_yaml_dir, data_yaml.get("test", "../test/images"))
 
     dataset_cfg = DatasetConfig(
         data_yaml=data_yaml_path,
@@ -427,9 +421,7 @@ def setup_logger(
     if config:
         log_dir = config.get_log_dir()
         log_dir.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(
-            log_dir / f"{name}.log", encoding="utf-8"
-        )
+        file_handler = logging.FileHandler(log_dir / f"{name}.log", encoding="utf-8")
         file_handler.setLevel(log_level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -641,11 +633,7 @@ def get_images_in_dir(directory: Path, extensions: tuple[str, ...] | None = None
     if not directory.exists():
         return []
 
-    images = [
-        f
-        for f in directory.iterdir()
-        if f.is_file() and f.suffix.lower() in extensions
-    ]
+    images = [f for f in directory.iterdir() if f.is_file() and f.suffix.lower() in extensions]
     return sorted(images)
 
 
@@ -807,9 +795,7 @@ class DetectorRegistry:
         """
         if name not in cls._registry:
             available = ", ".join(cls._registry.keys()) or "none"
-            raise KeyError(
-                f"Detector '{name}' not registered. Available: {available}"
-            )
+            raise KeyError(f"Detector '{name}' not registered. Available: {available}")
         return cls._registry[name]
 
     @classmethod
@@ -956,10 +942,7 @@ class UltralyticsDetector:
             "precision": float(results.box.mp),
             "recall": float(results.box.mr),
             "f1": float(
-                2
-                * results.box.mp
-                * results.box.mr
-                / (results.box.mp + results.box.mr + 1e-10)
+                2 * results.box.mp * results.box.mr / (results.box.mp + results.box.mr + 1e-10)
             ),
             "per_class_ap50": {
                 config.dataset.names[i]: float(v)
@@ -1220,12 +1203,8 @@ def get_resource_usage() -> dict[str, Any]:
     }
 
     if torch.cuda.is_available():
-        usage["gpu_memory_allocated_gb"] = round(
-            torch.cuda.memory_allocated() / (1024**3), 2
-        )
-        usage["gpu_memory_reserved_gb"] = round(
-            torch.cuda.memory_reserved() / (1024**3), 2
-        )
+        usage["gpu_memory_allocated_gb"] = round(torch.cuda.memory_allocated() / (1024**3), 2)
+        usage["gpu_memory_reserved_gb"] = round(torch.cuda.memory_reserved() / (1024**3), 2)
         usage["gpu_utilization"] = "N/A (requires nvidia-smi)"
 
     return usage

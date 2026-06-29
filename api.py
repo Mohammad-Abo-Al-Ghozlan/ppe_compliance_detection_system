@@ -46,18 +46,32 @@ app_state: dict[str, Any] = {
 
 
 class BoundingBox(BaseModel):
-    x1: float = Field(..., description="Top-left X coordinate", json_schema_extra={"examples": [100.0]})
-    y1: float = Field(..., description="Top-left Y coordinate", json_schema_extra={"examples": [50.0]})
-    x2: float = Field(..., description="Bottom-right X coordinate", json_schema_extra={"examples": [200.0]})
-    y2: float = Field(..., description="Bottom-right Y coordinate", json_schema_extra={"examples": [150.0]})
+    x1: float = Field(
+        ..., description="Top-left X coordinate", json_schema_extra={"examples": [100.0]}
+    )
+    y1: float = Field(
+        ..., description="Top-left Y coordinate", json_schema_extra={"examples": [50.0]}
+    )
+    x2: float = Field(
+        ..., description="Bottom-right X coordinate", json_schema_extra={"examples": [200.0]}
+    )
+    y2: float = Field(
+        ..., description="Bottom-right Y coordinate", json_schema_extra={"examples": [150.0]}
+    )
 
 
 class Detection(BaseModel):
     class_id: int = Field(..., description="Class index", json_schema_extra={"examples": [3]})
-    class_name: str = Field(..., description="Class label", json_schema_extra={"examples": ["helmet"]})
-    confidence: float = Field(..., ge=0, le=1, description="Detection confidence", json_schema_extra={"examples": [0.92]})
+    class_name: str = Field(
+        ..., description="Class label", json_schema_extra={"examples": ["helmet"]}
+    )
+    confidence: float = Field(
+        ..., ge=0, le=1, description="Detection confidence", json_schema_extra={"examples": [0.92]}
+    )
     bbox: BoundingBox
-    area: float = Field(..., description="Bounding box area in pixels", json_schema_extra={"examples": [10000.0]})
+    area: float = Field(
+        ..., description="Bounding box area in pixels", json_schema_extra={"examples": [10000.0]}
+    )
 
 
 class PredictionResponse(BaseModel):
@@ -110,33 +124,38 @@ class ErrorResponse(BaseModel):
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
     logger = logging.getLogger("api")
-    
+
     # Extract config and model from app state (set before uvicorn.run)
     config = app_state.get("config")
     model_path = app_state.get("model_path")
-    
+
     if not config or not model_path:
         logger.error("API started without proper configuration state.")
         yield
         return
-        
+
     app_state["start_time"] = time.time()
     app_state["device_info"] = get_device_info()
-    
+
     try:
         logger.info(f"Loading model from {model_path}...")
         model = YOLO(str(model_path))
         # Warmup
-        model.predict(str(config.dataset.test_path / "images"), imgsz=config.dataset.img_size, verbose=False, max_det=1)
-        
+        model.predict(
+            str(config.dataset.test_path / "images"),
+            imgsz=config.dataset.img_size,
+            verbose=False,
+            max_det=1,
+        )
+
         app_state["model"] = model
         app_state["model_name"] = Path(model_path).parent.parent.name
         logger.info("Model loaded and warmed up successfully.")
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
-        
+
     yield
-    
+
     logger.info("Shutting down API...")
 
 
@@ -171,7 +190,7 @@ async def health_check():
         model_name=app_state.get("model_name", "unknown"),
         device=device_info.get("device", "cpu"),
         gpu_available=device_info.get("cuda_available", False),
-        uptime_seconds=time.time() - app_state.get("start_time", time.time())
+        uptime_seconds=time.time() - app_state.get("start_time", time.time()),
     )
 
 
@@ -181,7 +200,7 @@ async def get_classes():
     config: PipelineConfig | None = app_state.get("config")
     if not config:
         raise HTTPException(status_code=500, detail="Config not loaded")
-        
+
     classes = {i: name for i, name in enumerate(config.dataset.names)}
     return ClassesResponse(classes=classes, count=len(classes))
 
@@ -190,65 +209,75 @@ async def get_classes():
 async def predict_image(
     file: UploadFile = File(...),
     conf: float = Query(None, description="Confidence threshold", ge=0.0, le=1.0),
-    iou: float = Query(None, description="NMS IoU threshold", ge=0.0, le=1.0)
+    iou: float = Query(None, description="NMS IoU threshold", ge=0.0, le=1.0),
 ):
     """Run inference on a single uploaded image."""
     model: YOLO | None = app_state.get("model")
     config: PipelineConfig | None = app_state.get("config")
-    
+
     if not model or not config:
         raise HTTPException(status_code=503, detail="Model not initialized")
-        
+
     if file.size is not None and file.size > config.api.max_file_size_mb * 1024 * 1024:
-        raise HTTPException(status_code=413, detail=f"File too large. Max {config.api.max_file_size_mb}MB")
-        
+        raise HTTPException(
+            status_code=413, detail=f"File too large. Max {config.api.max_file_size_mb}MB"
+        )
+
     valid_exts = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
     filename = file.filename or "unknown.jpg"
     ext = Path(filename).suffix.lower()
     if ext not in valid_exts:
         raise HTTPException(status_code=400, detail=f"Invalid file type. Supported: {valid_exts}")
-        
+
     t0 = time.perf_counter()
-    
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
         temp_file.write(await file.read())
         temp_path = temp_file.name
-        
+
     try:
         conf_thresh = conf if conf is not None else config.inference.conf
         iou_thresh = iou if iou is not None else config.inference.iou
-        
-        results = model.predict(temp_path, imgsz=config.dataset.img_size, conf=conf_thresh, iou=iou_thresh, verbose=False)
+
+        results = model.predict(
+            temp_path,
+            imgsz=config.dataset.img_size,
+            conf=conf_thresh,
+            iou=iou_thresh,
+            verbose=False,
+        )
         result = results[0]
-        
+
         detections = []
         if result.boxes is not None:
             for box in result.boxes:
                 x1, y1, x2, y2 = box.xyxy[0].tolist()
-                detections.append({
-                    "class_id": int(box.cls[0]),
-                    "class_name": config.dataset.names[int(box.cls[0])],
-                    "confidence": float(box.conf[0]),
-                    "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2},
-                    "area": (x2 - x1) * (y2 - y1)
-                })
-                
+                detections.append(
+                    {
+                        "class_id": int(box.cls[0]),
+                        "class_name": config.dataset.names[int(box.cls[0])],
+                        "confidence": float(box.conf[0]),
+                        "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2},
+                        "area": (x2 - x1) * (y2 - y1),
+                    }
+                )
+
         # Detect violations
         v_count, v_list = detect_violations(detections)
-        
+
         t_ms = (time.perf_counter() - t0) * 1000
-        
+
         # We need actual image size
         img = cv2.imread(temp_path)
         h, w = img.shape[:2] if img is not None else (0, 0)
-        
+
         return PredictionResponse(
             predictions=[Detection(**d) for d in detections],
             detection_count=len(detections),
             violation_count=v_count,
             violations=v_list,
             processing_time_ms=t_ms,
-            image_size={"width": w, "height": h}
+            image_size={"width": w, "height": h},
         )
     finally:
         Path(temp_path).unlink(missing_ok=True)
@@ -263,9 +292,9 @@ if __name__ == "__main__":
 
     config = load_config(args.config)
     setup_logger("api", config)
-    
+
     # Set global state for FastAPI
     app_state["config"] = config
     app_state["model_path"] = Path(args.model)
-    
+
     uvicorn.run("api:app", host=config.api.host, port=args.port, workers=config.api.workers)

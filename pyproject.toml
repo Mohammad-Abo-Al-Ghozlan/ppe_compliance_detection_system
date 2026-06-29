@@ -4,9 +4,11 @@ target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
+skip = [".venv", "venv"]
 line_length = 99
 
 [tool.mypy]
+exclude = '(^\.venv/|^venv/)'
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
