@@ -151,7 +151,7 @@ MIT
 
 ### Built with precision by **Mohammad Abo Al Ghozlan (MoGhoz)**
 
-**Full-Stack Software Engineer • Machine Learning Enthusiast • Computer Vision Developer**
+**Full-Stack Developer • Software Engineer • Backend Engineer**
 
 Passionate about building production-grade software systems, scalable backend architectures, AI-powered applications, and enterprise automation solutions.
 
