@@ -189,7 +189,9 @@ def validate_dataset(config: PipelineConfig) -> bool:
     # Check class consistency
     if len(unique_class_ids) != nc:
         errors.append(
-            f"Dataset claims {nc} classes, but only found {len(unique_class_ids)} unique classes in labels."
+            f"Dataset claims {nc} classes, "
+            f"but only found {len(unique_class_ids)} "
+            "unique classes in labels."
         )
 
     # Convert sets for JSON

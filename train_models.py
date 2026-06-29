@@ -157,7 +157,8 @@ def train_pipeline(
 
     if not models_to_train:
         logger.error(
-            f"No valid models found to train. Available in config: {[m.name for m in config.models]}"
+            "No valid models found to train. "
+            f"Available in config: {[m.name for m in config.models]}"
         )
         sys.exit(1)
 
@@ -184,7 +185,8 @@ def train_pipeline(
 
         # Training
         try:
-            # We determine the detector type. By default in this pipeline, all use UltralyticsDetector
+            # We determine the detector type.
+            # By default in this pipeline, all use UltralyticsDetector
             detector_class = DetectorRegistry.get(model_config.name)
         except KeyError:
             # Fallback for dynamic model names
