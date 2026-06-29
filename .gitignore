@@ -1,0 +1,32 @@
+# Dataset
+archive/
+archive.zip
+datasets/
+
+# Models & weights
+models/
+runs/
+outputs/
+logs/
+visualizations/
+
+*.pt
+*.pth
+*.onnx
+*.torchscript
+*.engine
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

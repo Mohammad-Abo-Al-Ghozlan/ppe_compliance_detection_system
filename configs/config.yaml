@@ -1,0 +1,102 @@
+# =============================================================================
+# PPE Detection Pipeline — Central Configuration
+# =============================================================================
+# All dataset-specific values are loaded from data.yaml at runtime.
+# This file configures pipeline behavior only.
+# =============================================================================
+
+# Dataset — paths resolved relative to project root at runtime
+dataset:
+  data_yaml: "archive/data.yaml"
+  img_size: 640
+
+# Models to benchmark (plugin architecture — add new entries to extend)
+models:
+  - name: "yolo11n"
+    weights: "yolo11n.pt"
+  - name: "yolo11s"
+    weights: "yolo11s.pt"
+  - name: "rtdetr-l"
+    weights: "rtdetr-l.pt"
+
+# Training hyperparameters
+training:
+  epochs: 100
+  batch_size: 16
+  patience: 20
+  optimizer: "auto"
+  lr0: 0.01
+  lrf: 0.01
+  weight_decay: 0.0005
+  momentum: 0.937
+  amp: true
+  seed: 42
+  workers: 8
+  resume: false
+
+# Complementary augmentation
+# NOTE: brightness and exposure augmentations are NOT included because
+# the dataset already has brightness (±10%) and exposure (±5%) applied.
+augmentation:
+  mosaic: 1.0
+  mixup: 0.15
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.0          # Disabled — brightness already applied in dataset
+  flipud: 0.0
+  fliplr: 0.5
+  degrees: 0.0
+  translate: 0.1
+  scale: 0.5
+  perspective: 0.0
+  erasing: 0.4
+
+# Hyperparameter optimization (disabled by default)
+hpo:
+  enabled: false
+  n_trials: 10
+  metric: "metrics/mAP50-95"
+  direction: "maximize"
+
+# Evaluation thresholds
+evaluation:
+  conf_threshold: 0.25
+  iou_threshold: 0.7
+  max_det: 300
+
+# Inference defaults
+inference:
+  conf: 0.5
+  iou: 0.45
+  max_det: 300
+  line_width: 2
+  save_json: true
+  save_csv: true
+
+# Model export
+export:
+  formats:
+    - "torchscript"
+    - "onnx"
+  dynamic: false
+  simplify: true
+  opset: 17
+  half: false
+
+# FastAPI settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  max_file_size_mb: 50
+
+# Logging
+logging:
+  level: "INFO"
+  log_dir: "logs"
+
+# Output paths (relative to project root)
+paths:
+  models_dir: "models"
+  outputs_dir: "outputs"
+  visualizations_dir: "visualizations"
